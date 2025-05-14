@@ -220,9 +220,9 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
     algorithms::Pid pid = algorithms::Pid(3.0f, 0.02f, 2.5f);
 
     // Speed settings
-    uint8_t move_speed = 138;
+    uint8_t move_speed = 140;
     uint8_t speed_compensation = 20;
-    uint8_t boost = 7;
+    uint8_t boost = 8;
     std::vector<uint8_t> speeds = {move_speed, move_speed};
 
     // Turn settings
@@ -243,7 +243,7 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
     float movement_timer = 0.0f;
 
     float decision_cooldown_timer = 0.0f;
-    float decision_cooldown = 1.5f;
+    float decision_cooldown = 1.3f;
     bool is_on_intersection = false;
 
 
