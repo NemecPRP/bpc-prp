@@ -185,10 +185,13 @@ void CorridorFollow(const std::shared_ptr<nodes::IoNode> &io_node, const std::sh
             break;
         }
 
-
+        //std::cout << "CorridorFollow function yay!" << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
+
+
+
 
 
 bool IsOnIntersection(float dist_front, float dist_left, float dist_right) {
@@ -219,12 +222,13 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
     // Speed settings
     uint8_t move_speed = 138;
     uint8_t speed_compensation = 20;
+    uint8_t boost = 7;
     std::vector<uint8_t> speeds = {move_speed, move_speed};
 
     // Turn settings
-    float turn_speed = 6.0f;
+    float turn_speed = 19.0f;
     float target_rot = 0.0f;
-    float max_turn_time = 1.9f;
+    float max_turn_time = 0.5f;
 
     // Turn timer
     float turn_timer = 0.0f;
@@ -239,7 +243,7 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
     float movement_timer = 0.0f;
 
     float decision_cooldown_timer = 0.0f;
-    float decision_cooldown = 3.3f;
+    float decision_cooldown = 1.5f;
     bool is_on_intersection = false;
 
 
@@ -291,7 +295,7 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
                     int marker = camera_node->aruco_detector.getId();
 
                     // Add it to queue
-                    if (marker >= 0 && marker <= 2) {
+                    if (marker >= 10 && marker <= 12) {
                         // First marker
                         if (markers.empty()) markers.push_back(marker);
 
@@ -326,17 +330,17 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
                     float diff;
                     float dist_left;
                     float dist_right;
-                    if (lidar_node->dist_right > 0.4f) {
-                        dist_left = lidar_node->dist_left;
-                        dist_right = lidar_node->dist_right;
-                        diff = 0.2f - dist_left;
-                    }
-                    else if (lidar_node->dist_left > 0.4f) {
-                        dist_left = lidar_node->dist_left;
-                        dist_right = lidar_node->dist_right;
-                        diff = dist_right - 0.2f;
-                    }
-                    else {
+                    //if (lidar_node->dist_right > 0.6f) {
+                    //    dist_left = std::clamp(lidar_node->dist_left, 0.0f, 0.2f);
+                    //    dist_right = std::clamp(lidar_node->dist_right, 0.0f, 0.2f);
+                    //    diff = 0.3f - dist_left;
+                    //}
+                    //else if (lidar_node->dist_left > 0.6f) {
+                    //    dist_left = std::clamp(lidar_node->dist_left, 0.0f, 0.2f);
+                    //    dist_right = std::clamp(lidar_node->dist_right, 0.0f, 0.2f);
+                    //    diff = dist_right - 0.3f;
+                    //}
+                    //else {
                         dist_left = std::clamp(lidar_node->dist_left, 0.0f, 0.2f);
                         dist_right = std::clamp(lidar_node->dist_right, 0.0f, 0.2f);
 
@@ -350,9 +354,16 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
                     uint8_t ceilling = 2;
                     final_compensation = std::clamp(final_compensation, bottom, ceilling);
 
-                    if (dist_left < dist_right) speeds = {move_speed + final_compensation, move_speed};
-                    else if (dist_right < dist_left) speeds = {move_speed, move_speed + final_compensation};
-                    else speeds = {move_speed, move_speed};
+                    if (lidar_node->dist_front > 0.3f) {
+                        if (dist_left < dist_right) speeds = {move_speed + final_compensation + boost, move_speed + boost};
+                        else if (dist_right < dist_left) speeds = {move_speed + boost, move_speed + final_compensation + boost};
+                        else speeds = {move_speed + boost, move_speed + boost};
+                    }
+                    else {
+                        if (dist_left < dist_right) speeds = {move_speed + final_compensation, move_speed};
+                        else if (dist_right < dist_left) speeds = {move_speed, move_speed + final_compensation};
+                        else speeds = {move_speed, move_speed};
+                    }
 
                     motor_node->publish_message(speeds);
                 }
@@ -374,13 +385,13 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
                     // Set rotation speeds
                     switch (next_dir) {
                         // Straight
-                        case 0: speeds = {move_speed, move_speed}; break;
+                        case 10: speeds = {move_speed, move_speed}; break;
 
                         // Left
-                        case 1: speeds = {127 - turn_speed, 127 + turn_speed}; break;
+                        case 11: speeds = {127 - turn_speed, 127 + turn_speed}; break;
 
                         // Right
-                        case 2: speeds = {127 + turn_speed, 127 - turn_speed}; break;
+                        case 12: speeds = {127 + turn_speed, 127 - turn_speed}; break;
 
                         // None -> forward
                         default:
@@ -388,7 +399,12 @@ void MazeEscape(const std::shared_ptr<nodes::IoNode> &io_node, const std::shared
 
                             // Right clear
                             else speeds = {127 + turn_speed, 127 - turn_speed};
-
+                        //default: speeds = {127 - turn_speed, 127 + turn_speed}; break;
+                        //default: if (lidar_node->dist_front < 0.2) {
+                        //            if (lidar_node->dist_right > 0.2) {speeds = {127 + turn_speed, 127 - turn_speed}; break;}
+                        //                speeds = {127 - turn_speed, 127 + turn_speed}; break;
+                        //            }
+                        //    speeds = {move_speed, move_speed}; break;
 
                     }
 
